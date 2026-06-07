@@ -1,11 +1,15 @@
 import { Router } from 'express';
-import { verifyFirebaseToken } from '../middleware/firebaseAuth';
-import { analyzeTarot } from '../controllers/tarot.controller';
+import { analyzeTarot, getTodayStats, incrementTodayStats } from '../controllers/tarot.controller';
 
 const router = Router();
 
 // POST /api/tarot/analyze
-// Verifies Firebase token, accepts 3 tarot cards + MBTI, returns Gemini AI analysis
-router.post('/analyze', verifyFirebaseToken, analyzeTarot);
+router.post('/analyze', analyzeTarot);
+
+// GET /api/tarot/stats/today  → 오늘 타로 결과 조회 수
+router.get('/stats/today', getTodayStats);
+
+// POST /api/tarot/stats/today → 타로 결과 확인 후 +1
+router.post('/stats/today', incrementTodayStats);
 
 export default router;

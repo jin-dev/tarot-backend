@@ -1,10 +1,11 @@
-import { Response } from 'express';
-import { AuthRequest } from '../middleware/firebaseAuth';
-import { analyzeTarotWithGemini, TarotCard } from '../services/gemini.service';
+import { Request, Response } from 'express';
+import { analyzeTarotWithOpenAI, TarotCard } from '../services/openai.service';
+import { saveReading, getTodayCount, incrementTodayCount } from '../services/firestore.service';
 
-export const analyzeTarot = async (req: AuthRequest, res: Response): Promise<void> => {
+export const analyzeTarot = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { mbti, category, cards } = req.body as {
+    const { uid, mbti, category, cards } = req.body as {
+      uid?: string;
       mbti: string;
       category: string;
       cards: TarotCard[];
@@ -15,13 +16,34 @@ export const analyzeTarot = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    console.log(`[Request received] UID: ${req.uid}, MBTI: ${mbti}, Category: ${category}`);
+    console.log(`[Request received] UID: ${uid ?? 'anonymous'}, MBTI: ${mbti}, Category: ${category}`);
 
-    const resultText = await analyzeTarotWithGemini({ mbti, category, cards });
+    const resultText = await analyzeTarotWithOpenAI({ mbti, category, cards });
+    const docId = await saveReading(uid ?? 'anonymous', mbti, category, cards, resultText);
 
-    res.status(200).json({ resultText });
+    res.status(200).json({ resultText, docId });
   } catch (error) {
     console.error('Error during tarot analysis:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
+  }
+};
+
+export const getTodayStats = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const todayCount = await getTodayCount();
+    res.status(200).json({ todayCount });
+  } catch (error) {
+    console.error('Error fetching today stats:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
+  }
+};
+
+export const incrementTodayStats = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const todayCount = await incrementTodayCount();
+    res.status(200).json({ todayCount });
+  } catch (error) {
+    console.error('Error incrementing today stats:', error);
     res.status(500).json({ error: 'An internal server error occurred.' });
   }
 };

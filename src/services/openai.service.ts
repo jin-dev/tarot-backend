@@ -1,6 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '');
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? '' });
 
 export interface TarotCard {
   name: string;
@@ -14,7 +14,7 @@ export interface TarotAnalysisInput {
   cards: TarotCard[];
 }
 
-export const analyzeTarotWithGemini = async (input: TarotAnalysisInput): Promise<string> => {
+export const analyzeTarotWithOpenAI = async (input: TarotAnalysisInput): Promise<string> => {
   const { mbti, category, cards } = input;
 
   const cardDescriptions = cards
@@ -39,7 +39,11 @@ ${cardDescriptions}
 5. 전체 300~400자 이내로 간결하게 작성하세요.
 `.trim();
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 600,
+  });
+
+  return response.choices[0]?.message.content ?? '';
 };

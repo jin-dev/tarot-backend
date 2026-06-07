@@ -2,11 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
-import  tarotRoutes  from './routes/tarot.routes';
-
-
-dotenv.config();
+import tarotRoutes from './routes/tarot.routes';
 
 const app: Application = express();
 
